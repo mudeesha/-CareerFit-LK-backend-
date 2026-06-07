@@ -1,13 +1,9 @@
 import { prisma } from "../lib/prisma";
 
-const DEMO_CANDIDATE_EMAIL = "nimal.perera@example.com";
-
-export async function findDemoCandidate() {
-  return prisma.candidateProfile.findFirst({
+export async function findCandidateByUserId(userId: string) {
+  return prisma.candidateProfile.findUnique({
     where: {
-      user: {
-        email: DEMO_CANDIDATE_EMAIL,
-      },
+      userId,
     },
   });
 }

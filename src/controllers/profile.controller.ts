@@ -1,21 +1,51 @@
 import { Request, Response } from "express";
-import { updateProfileSchema } from "../dtos/profile.dto";
+import {
+  updateCandidateProfileSchema,
+  updateEmployerProfileSchema,
+} from "../dtos/profile.dto";
 import {
   getMyProfileService,
   updateMyProfileService,
 } from "../services/profile.service";
 import { sendSuccess } from "../utils/apiResponse";
+import { AppError } from "../utils/appError";
 
-export async function getMyProfileController(_req: Request, res: Response) {
-  const profile = await getMyProfileService();
+function getAuthUser(req: Request) {
+  const user = req.user;
+
+  if (!user) {
+    throw new AppError("UNAUTHORIZED", "Authentication required", 401);
+  }
+
+  return user;
+}
+
+export async function getMyProfileController(req: Request, res: Response) {
+  const user = getAuthUser(req);
+
+  const profile = await getMyProfileService(user.id, user.role);
 
   return sendSuccess(res, profile);
 }
 
 export async function updateMyProfileController(req: Request, res: Response) {
-  const data = updateProfileSchema.parse(req.body);
+  const user = getAuthUser(req);
 
-  const profile = await updateMyProfileService(data);
+  if (user.role === "CANDIDATE") {
+    const data = updateCandidateProfileSchema.parse(req.body);
 
-  return sendSuccess(res, profile, "Profile updated successfully");
+    const profile = await updateMyProfileService(user.id, user.role, data);
+
+    return sendSuccess(res, profile, "Candidate profile updated successfully");
+  }
+
+  if (user.role === "EMPLOYER") {
+    const data = updateEmployerProfileSchema.parse(req.body);
+
+    const profile = await updateMyProfileService(user.id, user.role, data);
+
+    return sendSuccess(res, profile, "Employer profile updated successfully");
+  }
+
+  throw new AppError("PROFILE_UPDATE_NOT_ALLOWED", "Profile update is not allowed", 403);
 }

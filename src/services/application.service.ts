@@ -3,7 +3,7 @@ import {
   createApplicationRecord,
   findApplicationByCandidateAndJob,
   findApplicationById,
-  findDemoCandidate,
+  findCandidateByUserId,
   findJobForApplication,
   findMyApplications,
   incrementJobApplicantCount,
@@ -11,8 +11,11 @@ import {
 } from "../repositories/application.repository";
 import { AppError } from "../utils/appError";
 
-export async function createApplicationService(data: CreateApplicationDto) {
-  const candidate = await findDemoCandidate();
+export async function createApplicationService(
+  userId: string,
+  data: CreateApplicationDto
+) {
+  const candidate = await findCandidateByUserId(userId);
 
   if (!candidate) {
     throw new AppError("CANDIDATE_NOT_FOUND", "Candidate profile not found", 404);
@@ -55,8 +58,8 @@ export async function createApplicationService(data: CreateApplicationDto) {
   return application;
 }
 
-export async function getMyApplicationsService() {
-  const candidate = await findDemoCandidate();
+export async function getMyApplicationsService(userId: string) {
+  const candidate = await findCandidateByUserId(userId);
 
   if (!candidate) {
     throw new AppError("CANDIDATE_NOT_FOUND", "Candidate profile not found", 404);
@@ -65,8 +68,11 @@ export async function getMyApplicationsService() {
   return findMyApplications(candidate.id);
 }
 
-export async function withdrawApplicationService(applicationId: string) {
-  const candidate = await findDemoCandidate();
+export async function withdrawApplicationService(
+  userId: string,
+  applicationId: string
+) {
+  const candidate = await findCandidateByUserId(userId);
 
   if (!candidate) {
     throw new AppError("CANDIDATE_NOT_FOUND", "Candidate profile not found", 404);

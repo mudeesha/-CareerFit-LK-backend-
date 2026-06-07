@@ -9,6 +9,7 @@ import profileRoutes from "./routes/profile.routes";
 import applicationRoutes from "./routes/application.routes";
 import cvRoutes from "./routes/cv.routes";
 import matchRoutes from "./routes/match.routes";
+import authRoutes from "./routes/auth.routes";
 
 import { errorHandler } from "./middlewares/errorHandler";
 
@@ -36,6 +37,7 @@ app.get("/health", (_req, res) => {
 });
 
 app.use("/api/jobs", jobRoutes);
+app.use("/api/auth", authRoutes);
 app.use("/api/companies", companyRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/profile", profileRoutes);
