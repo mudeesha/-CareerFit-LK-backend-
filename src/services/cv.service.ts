@@ -17,6 +17,19 @@ export async function analyzeCvService(data: AnalyzeCvDto) {
   return createCvAnalysisRecord(candidate.id, data);
 }
 
+export async function uploadAndAnalyzeCvService(file: Express.Multer.File) {
+  const candidate = await findDemoCandidateForCv();
+
+  if (!candidate) {
+    throw new AppError("CANDIDATE_NOT_FOUND", "Candidate profile not found", 404);
+  }
+
+  return createCvAnalysisRecord(candidate.id, {
+    fileName: file.originalname,
+    fileUrl: `/uploads/cvs/${file.filename}`,
+  });
+}
+
 export async function getMyLatestCvAnalysisService() {
   const candidate = await findDemoCandidateForCv();
 

@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import path from "path";
 
 import jobRoutes from "./routes/job.routes";
 import companyRoutes from "./routes/company.routes";
@@ -15,6 +16,9 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// Serve uploaded files publicly
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 app.get("/", (_req, res) => {
   res.json({
