@@ -1,5 +1,8 @@
 import { Request, Response } from "express";
-import { getJobsQuerySchema } from "../../dtos/public/job.dto";
+import {
+  getJobsQuerySchema,
+  jobIdParamSchema,
+} from "../../dtos/public/job.dto";
 import {
   getJobByIdService,
   getJobsService,
@@ -14,7 +17,9 @@ export async function getJobsController(req: Request, res: Response) {
 }
 
 export async function getJobByIdController(req: Request, res: Response) {
-  const job = await getJobByIdService(req.params.id);
+  const { id } = jobIdParamSchema.parse(req.params);
+
+  const job = await getJobByIdService(id);
 
   return sendSuccess(res, job);
 }

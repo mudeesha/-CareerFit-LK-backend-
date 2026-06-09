@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { companyIdParamSchema } from "../../dtos/public/company.dto";
 import {
   getCompaniesService,
   getCompanyByIdService,
@@ -12,7 +13,9 @@ export async function getCompaniesController(_req: Request, res: Response) {
 }
 
 export async function getCompanyByIdController(req: Request, res: Response) {
-  const company = await getCompanyByIdService(req.params.id);
+  const { id } = companyIdParamSchema.parse(req.params);
+
+  const company = await getCompanyByIdService(id);
 
   return sendSuccess(res, company);
 }

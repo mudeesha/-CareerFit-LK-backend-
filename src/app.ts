@@ -11,11 +11,14 @@ import cvRoutes from "./routes/candidate/cv.routes";
 import matchRoutes from "./routes/candidate/match.routes";
 import authRoutes from "./routes/auth/auth.routes";
 import savedJobRoutes from "./routes/candidate/savedJob.routes";
+import candidateDashboardRoutes from "./routes/candidate/dashboard.routes";
 
 // employer
 import employerJobRoutes from "./routes/employer/job.routes";
 import employerApplicantRoutes from "./routes/employer/applicant.routes";
 import employerInterviewRoutes from "./routes/employer/interview.routes";
+import employerDashboardRoutes from "./routes/employer/dashboard.routes";
+import employerCompanyRoutes from "./routes/employer/company.routes";
 
 // admin
 import adminDashboardRoutes from "./routes/admin/dashboard.routes";
@@ -58,11 +61,14 @@ app.use("/api/applications", applicationRoutes);
 app.use("/api/cv", cvRoutes);
 app.use("/api", matchRoutes);
 app.use("/api/saved-jobs", savedJobRoutes);
+app.use("/api/candidate/dashboard", candidateDashboardRoutes);
 
 //Employer
 app.use("/api/employer/jobs", employerJobRoutes);
 app.use("/api/employer/applicant", employerApplicantRoutes);
 app.use("/api/employer/interview", employerInterviewRoutes);
+app.use("/api/employer/dashboard", employerDashboardRoutes);
+app.use("/api/employer/company", employerCompanyRoutes);
 
 // admin
 app.use("/api/admin/dashboard", adminDashboardRoutes);
