@@ -5,6 +5,14 @@ export async function findCandidateForMatchByUserId(userId: string) {
     where: {
       userId,
     },
+    include: {
+      cvAnalyses: {
+        orderBy: {
+          createdAt: "desc",
+        },
+        take: 1,
+      },
+    },
   });
 }
 

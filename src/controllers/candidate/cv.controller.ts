@@ -1,7 +1,5 @@
 import { Request, Response } from "express";
-import { analyzeCvSchema } from "../../dtos/candidate/cv.dto";
 import {
-  analyzeCvService,
   getMyCvAnalysesService,
   getMyLatestCvAnalysisService,
   uploadAndAnalyzeCvService,
@@ -19,15 +17,6 @@ function getAuthUserId(req: Request) {
   return userId;
 }
 
-export async function analyzeCvController(req: Request, res: Response) {
-  const userId = getAuthUserId(req);
-  const data = analyzeCvSchema.parse(req.body);
-
-  const analysis = await analyzeCvService(userId, data);
-
-  return sendSuccess(res, analysis, "CV analyzed successfully", 201);
-}
-
 export async function uploadAndAnalyzeCvController(req: Request, res: Response) {
   const userId = getAuthUserId(req);
 
@@ -37,7 +26,7 @@ export async function uploadAndAnalyzeCvController(req: Request, res: Response) 
 
   const analysis = await uploadAndAnalyzeCvService(userId, req.file);
 
-  return sendSuccess(res, analysis, "CV uploaded and analyzed successfully", 201);
+  return sendSuccess(res, analysis, "CV uploaded and parsed successfully", 201);
 }
 
 export async function getMyLatestCvAnalysisController(

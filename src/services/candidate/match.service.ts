@@ -21,19 +21,21 @@ export async function getJobMatchService(
     throw new AppError("JOB_NOT_FOUND", "Job not found", 404);
   }
 
-  const candidateSkills = toStringArray(candidate.skills);
-  const jobSkills = toStringArray(job.skills);
+  const latestCvAnalysis = candidate.cvAnalyses[0] || null;
+  const candidateSkills = toStringArray(latestCvAnalysis?.extractedSkills);
+  const candidateLanguages = toStringArray(latestCvAnalysis?.languages);
+  const candidateExperienceYears = latestCvAnalysis?.experienceYears ?? 0;
 
-  const normalizedCandidateSkills = candidateSkills.map((skill) =>
-    skill.toLowerCase()
-  );
+  const jobSkills = getJobRequiredSkills(job);
+
+  const candidateSkillSet = new Set(candidateSkills.map(normalizeSkill));
 
   const matchedSkills = jobSkills.filter((skill) =>
-    normalizedCandidateSkills.includes(skill.toLowerCase())
+    candidateSkillSet.has(normalizeSkill(skill))
   );
 
   const missingSkills = jobSkills.filter(
-    (skill) => !normalizedCandidateSkills.includes(skill.toLowerCase())
+    (skill) => !candidateSkillSet.has(normalizeSkill(skill))
   );
 
   const skillsScore =
@@ -42,7 +44,7 @@ export async function getJobMatchService(
       : Math.round((matchedSkills.length / jobSkills.length) * 100);
 
   const experienceScore = calculateExperienceScore(
-    candidate.experienceYears,
+    candidateExperienceYears,
     job.experienceLevel
   );
 
@@ -58,13 +60,13 @@ export async function getJobMatchService(
     job.salaryMax
   );
 
-  const languageScore = calculateLanguageScore(candidate.languages);
+  const languageScore = calculateLanguageScore(candidateLanguages);
 
   const overallScore = Math.round(
-    skillsScore * 0.5 +
+    skillsScore * 0.6 +
       experienceScore * 0.2 +
-      locationScore * 0.15 +
-      salaryScore * 0.1 +
+      locationScore * 0.1 +
+      salaryScore * 0.05 +
       languageScore * 0.05
   );
 
@@ -90,10 +92,28 @@ export async function getJobMatchService(
 
 function toStringArray(value: unknown): string[] {
   if (Array.isArray(value)) {
-    return value.map(String);
+    return value.filter((item): item is string => typeof item === "string");
   }
 
   return [];
+}
+
+function normalizeSkill(skill: string) {
+  return skill.trim().toLowerCase();
+}
+
+function getJobRequiredSkills(job: {
+  skills: unknown;
+  preferredSkills?: unknown;
+}) {
+  const skills = [
+    ...toStringArray(job.skills),
+    ...toStringArray(job.preferredSkills),
+  ];
+
+  return Array.from(new Set(skills.map((skill) => skill.trim()))).filter(
+    Boolean
+  );
 }
 
 function calculateExperienceScore(
@@ -216,9 +236,7 @@ function buildSuggestions(missingSkills: string[]): string[] {
     return ["Your CV matches the main job requirements well."];
   }
 
-  return missingSkills.map(
-    (skill) => `Add or improve ${skill} experience in your CV.`
-  );
+  return missingSkills.map((skill) => `Improve your ${skill} skills.`);
 }
 
 function buildLearningPath(missingSkills: string[]): string[] {

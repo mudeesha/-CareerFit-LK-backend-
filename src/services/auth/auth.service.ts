@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import jwt, { SignOptions } from "jsonwebtoken";
 import { LoginDto, RegisterDto } from "../../dtos/auth/auth.dto";
 import {
   createUserWithProfile,
@@ -19,9 +19,11 @@ function getJwtSecret() {
 }
 
 function generateToken(userId: string) {
-  return jwt.sign({ userId }, getJwtSecret(), {
-    expiresIn: process.env.JWT_EXPIRES_IN || "7d",
-  });
+  const options: SignOptions = {
+    expiresIn: (process.env.JWT_EXPIRES_IN || "7d") as SignOptions["expiresIn"],
+  };
+
+  return jwt.sign({ userId }, getJwtSecret(), options);
 }
 
 function sanitizeUser(user: any) {

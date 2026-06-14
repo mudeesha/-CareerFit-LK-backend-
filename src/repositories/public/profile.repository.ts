@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import {
   UpdateCandidateProfileDto,
@@ -56,11 +57,19 @@ export async function updateCandidateProfileByUserId(
     phone: data.phone ?? profile.phone ?? undefined,
     district: data.district ?? profile.district ?? undefined,
     currentRole: data.currentRole ?? profile.currentRole ?? undefined,
-    preferredLocations: data.preferredLocations ?? profile.preferredLocations,
+    preferredLocations:
+      data.preferredLocations ??
+      (profile.preferredLocations === null
+        ? Prisma.JsonNull
+        : profile.preferredLocations),
     expectedSalary: data.expectedSalary ?? profile.expectedSalary ?? undefined,
     experienceYears: data.experienceYears ?? profile.experienceYears,
-    skills: data.skills ?? profile.skills,
-    languages: data.languages ?? profile.languages,
+    skills:
+      data.skills ??
+      (profile.skills === null ? Prisma.JsonNull : profile.skills),
+    languages:
+      data.languages ??
+      (profile.languages === null ? Prisma.JsonNull : profile.languages),
     education: data.education ?? profile.education ?? undefined,
     linkedinUrl: data.linkedinUrl ?? profile.linkedinUrl ?? undefined,
     githubUrl: data.githubUrl ?? profile.githubUrl ?? undefined,

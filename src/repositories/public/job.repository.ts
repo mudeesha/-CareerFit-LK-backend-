@@ -87,3 +87,28 @@ export async function findJobById(id: string) {
     },
   });
 }
+
+export async function findCandidateLatestCvSkills(userId: string) {
+  const candidate = await prisma.candidateProfile.findUnique({
+    where: { userId },
+    select: {
+      cvAnalyses: {
+        orderBy: {
+          createdAt: "desc",
+        },
+        take: 1,
+        select: {
+          extractedSkills: true,
+        },
+      },
+    },
+  });
+
+  const latestAnalysis = candidate?.cvAnalyses[0];
+
+  return Array.isArray(latestAnalysis?.extractedSkills)
+    ? latestAnalysis.extractedSkills.filter(
+        (skill): skill is string => typeof skill === "string"
+      )
+    : [];
+}

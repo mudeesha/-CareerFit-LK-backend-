@@ -8,6 +8,7 @@ import {
 } from "../../services/public/profile.service";
 import { sendSuccess } from "../../utils/apiResponse";
 import { AppError } from "../../utils/appError";
+import { Request, Response } from "express";
 
 function getAuthUser(req: Request) {
   const user = req.user;
@@ -47,4 +48,31 @@ export async function updateMyProfileController(req: Request, res: Response) {
   }
 
   throw new AppError("PROFILE_UPDATE_NOT_ALLOWED", "Profile update is not allowed", 403);
+}
+
+export async function uploadMyProfileAvatarController(
+  req: Request,
+  res: Response
+) {
+  const user = getAuthUser(req);
+
+  if (user.role !== "CANDIDATE") {
+    throw new AppError(
+      "PROFILE_IMAGE_NOT_ALLOWED",
+      "Only candidates can upload profile images",
+      403
+    );
+  }
+
+  if (!req.file) {
+    throw new AppError("IMAGE_REQUIRED", "Profile image is required", 400);
+  }
+
+  const profileImageUrl = `/uploads/profile-images/${req.file.filename}`;
+
+  const profile = await updateMyProfileService(user.id, user.role, {
+    profileImageUrl,
+  });
+
+  return sendSuccess(res, profile, "Profile image uploaded successfully");
 }

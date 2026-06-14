@@ -13,7 +13,7 @@ import { AppError } from "../../utils/appError";
 
 function toStringArray(value: unknown): string[] {
   if (Array.isArray(value)) {
-    return value.map(String);
+    return value.filter((item): item is string => typeof item === "string");
   }
 
   return [];
@@ -23,50 +23,68 @@ function normalizeSkill(skill: string) {
   return skill.trim().toLowerCase();
 }
 
+function getJobRequiredSkills(job: {
+  skills: unknown;
+  preferredSkills?: unknown;
+}) {
+  const skills = [
+    ...toStringArray(job.skills),
+    ...toStringArray(job.preferredSkills),
+  ];
+
+  return Array.from(new Set(skills.map((skill) => skill.trim()))).filter(
+    Boolean
+  );
+}
+
 function calculateMatchScore(
   candidateSkillsValue: unknown,
-  jobSkillsValue: unknown
+  job: {
+    skills: unknown;
+    preferredSkills?: unknown;
+  }
 ) {
-  const candidateSkills = toStringArray(candidateSkillsValue).map(normalizeSkill);
-  const jobSkills = toStringArray(jobSkillsValue).map(normalizeSkill);
+  const candidateSkills = toStringArray(candidateSkillsValue);
 
-  if (jobSkills.length === 0) {
+  const jobSkills = getJobRequiredSkills(job);
+
+  if (candidateSkills.length === 0 || jobSkills.length === 0) {
     return 0;
   }
 
-  const matchedSkills = jobSkills.filter((skill) =>
-    candidateSkills.includes(skill)
-  );
+  const candidateSkillSet = new Set(candidateSkills.map(normalizeSkill));
 
-  return Math.round((matchedSkills.length / jobSkills.length) * 100);
+  const matchedCount = jobSkills.filter((skill) =>
+    candidateSkillSet.has(normalizeSkill(skill))
+  ).length;
+
+  return Math.round((matchedCount / jobSkills.length) * 100);
 }
 
 function buildSkillGapInsights(
   candidateSkillsValue: unknown,
   jobs: {
     skills: unknown;
+    preferredSkills?: unknown;
   }[]
 ) {
   const candidateSkills = new Set(
     toStringArray(candidateSkillsValue).map(normalizeSkill)
   );
 
-  const demandCount = new Map<string, number>();
+  const missingSkillCounts = new Map<string, number>();
 
-  jobs.forEach((job) => {
-    toStringArray(job.skills).forEach((skill) => {
-      const trimmedSkill = skill.trim();
+  for (const job of jobs) {
+    const jobSkills = getJobRequiredSkills(job);
 
-      if (!trimmedSkill) {
-        return;
+    for (const skill of jobSkills) {
+      if (!candidateSkills.has(normalizeSkill(skill))) {
+        missingSkillCounts.set(skill, (missingSkillCounts.get(skill) || 0) + 1);
       }
+    }
+  }
 
-      demandCount.set(trimmedSkill, (demandCount.get(trimmedSkill) || 0) + 1);
-    });
-  });
-
-  return Array.from(demandCount.entries())
-    .filter(([skill]) => !candidateSkills.has(normalizeSkill(skill)))
+  return Array.from(missingSkillCounts.entries())
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5)
     .map(([skill, count]) => ({
@@ -110,11 +128,14 @@ export async function getCandidateDashboardService(
   ]);
 
   const latestCvAnalysis = candidate.cvAnalyses[0] || null;
+  const cvSkills = latestCvAnalysis?.extractedSkills ?? [];
 
-  const recommendedJobsWithMatch = recommendedJobs.map((job) => ({
-    ...job,
-    matchScore: calculateMatchScore(candidate.skills, job.skills),
-  }));
+  const recommendedJobsWithMatch = recommendedJobs
+    .map((job) => ({
+      ...job,
+      matchScore: calculateMatchScore(cvSkills, job),
+    }))
+    .sort((a, b) => b.matchScore - a.matchScore);
 
   return {
     profile: {
@@ -130,14 +151,14 @@ export async function getCandidateDashboardService(
     },
     stats: {
       profileCompletion: candidate.profileCompletion,
-      cvReadiness: latestCvAnalysis?.strengthScore || 0,
+      cvReadiness: latestCvAnalysis ? 100 : 0,
       applications: totalApplications,
       shortlisted: shortlistedApplications,
       savedJobs,
     },
     recommendedJobs: recommendedJobsWithMatch,
     recentApplications,
-    skillGapInsights: buildSkillGapInsights(candidate.skills, platformJobs),
+    skillGapInsights: buildSkillGapInsights(cvSkills, recommendedJobsWithMatch),
     latestCvAnalysis,
   };
 }

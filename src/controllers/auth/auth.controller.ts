@@ -5,6 +5,7 @@ import {
   loginService,
   registerService,
 } from "../../services/auth/auth.service";
+import { AppError } from "../../utils/appError";
 import { sendSuccess } from "../../utils/apiResponse";
 
 export async function registerController(req: Request, res: Response) {
@@ -24,9 +25,11 @@ export async function loginController(req: Request, res: Response) {
 }
 
 export async function getMeController(req: Request, res: Response) {
-  const userId = req.user?.id;
+  if (!req.user) {
+    throw new AppError("UNAUTHORIZED", "Authentication required", 401);
+  }
 
-  const user = await getMeService(userId);
+  const user = await getMeService(req.user.id);
 
   return sendSuccess(res, user);
 }

@@ -11,7 +11,7 @@ import { sendSuccess } from "../../utils/apiResponse";
 
 export async function getJobsController(req: Request, res: Response) {
   const filters = getJobsQuerySchema.parse(req.query);
-  const data = await getJobsService(filters);
+  const data = await getJobsService(filters, req.user);
 
   return sendSuccess(res, data);
 }
@@ -19,7 +19,7 @@ export async function getJobsController(req: Request, res: Response) {
 export async function getJobByIdController(req: Request, res: Response) {
   const { id } = jobIdParamSchema.parse(req.params);
 
-  const job = await getJobByIdService(id);
+  const job = await getJobByIdService(id, req.user);
 
   return sendSuccess(res, job);
 }

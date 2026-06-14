@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { UserRole } from "@prisma/client";
 import { findUserById } from "../repositories/auth/auth.repository";
-import { AppError } from "../../utils/appError";
+import { AppError } from "../utils/appError";
 
 declare global {
   namespace Express {
